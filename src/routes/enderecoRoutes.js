@@ -1,4 +1,4 @@
-import  express  from "express";
+import express from "express";
 import EnderecoController from "../conrollers/enderecoController.js";
 
 const routes = express.Router();

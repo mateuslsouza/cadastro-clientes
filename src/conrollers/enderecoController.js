@@ -1,51 +1,71 @@
-import  {endereco}  from "../models/endereco.js";
+import NaoEncontrado from "../erros/NaoEncontrado.js";
+import { endereco } from "../models/endereco.js";
 
-class EnderecoController{
-    static async listarEndereco(req, res){
-        try{
-            const listaEndereco = await endereco.find({});
-            res.status(200).json(listaEndereco)
-        }catch(erro){
-            res.status(500).json({message:`${erro.message} -  falha na requisição`})
-        };
-    };
-    static async listarEnderecoPorId(req, res){
-        try{
-            const id = req.params.id;
-            const enderecoEncontrado = await endereco.findById(id);
-            res.status(200).json(enderecoEncontrado);
-        }catch(erro){
-            res.status(500).json({message:`${erro.message} -  falha na requisição do endereço`});
-        };
-    };
-
-    static async cadastrarEndereco(req, res){
-        try{
-            const novoEndereco = await endereco.create(req.body);
-            res.status(201).json({ message: "criado com sucesso", cliente: novoEndereco});
-        }catch(erro){
-            res.status(500).json({ message: `${erro.message} - falha ao cadastrar endereço`});
-        };
-    };
-    static async atualizarEndereco(req, res){
-        try{
-            const id = req.params.id;
-            await endereco.findByIdAndUpdate(id, req.body);
-            res.status(200).json({ message: "endereço atualizado"});
-        }catch(erro){
-            res.status(500).json({ message: `${erro.message} - falha ao atualizar endereço`});
-        };
-    };
-
-    static async excluirEndereco(req, res){
-        try{
-            const id = req.params.id;
-            await endereco.findByIdAndDelete(id);
-            res.status(200).json({ message: "endereço excluido com sucesso"});
-        }catch(erro){
-            res.status(500).json({ message: `${erro.message} - falha ao excluir endereço`});
-        }
+class EnderecoController {
+  static listarEndereco = async (req, res, next) => {
+    try {
+      const listaEndereco = await endereco.find({});
+      res.status(200).json(listaEndereco);
+    } catch (erro) {
+      next(erro);
     }
-};
+  };
+  static listarEnderecoPorId = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const enderecoResultado = await endereco
+        .findById(id)
+        .populate("cnpj", "nome")
+        .exec();
+      if (enderecoResultado !== null) {
+        res.status(200).json(enderecoResultado);
+      } else {
+        next(new NaoEncontrado("ID do endereco não localizado"));
+      }
+    } catch (erro) {
+      next(erro);
+    }
+  };
+
+  static cadastrarEndereco = async (req, res, next) => {
+    try {
+      const novoEndereco = await endereco.create(req.body);
+      res
+        .status(201)
+        .json({ message: "criado com sucesso", cliente: novoEndereco });
+    } catch (erro) {
+      next(erro);
+    }
+  };
+  static atualizarEndereco = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const enderecoEncontrado = await endereco.findByIdAndUpdate(id, {
+        $set: req.body,
+      });
+      if (enderecoEncontrado !== null) {
+        res.status(200).json({ message: "endereço atualizado" });
+      } else {
+        next(new NaoEncontrado("ID do endereco não localizado"));
+      }
+    } catch (erro) {
+      next(erro);
+    }
+  };
+
+  static excluirEndereco = async (req, res, next) => {
+    try {
+      const id = req.params.id;
+      const enderecoEncontrado = await endereco.findByIdAndDelete(id);
+      if (enderecoEncontrado !== null) {
+        res.status(200).json({ message: "endereço excluido com sucesso" });
+      } else {
+        next(new NaoEncontrado("ID do endereco não encontrado"));
+      }
+    } catch (erro) {
+      next(erro);
+    }
+  };
+}
 
 export default EnderecoController;

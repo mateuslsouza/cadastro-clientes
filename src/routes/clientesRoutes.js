@@ -1,4 +1,4 @@
-import  express  from "express";
+import express from "express";
 import ClienteController from "../conrollers/clienteController.js";
 
 const routes = express.Router();
