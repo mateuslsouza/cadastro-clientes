@@ -1,5 +1,5 @@
 import NaoEncontrado from "../erros/NaoEncontrado.js";
-import cliente from "../models/cliente.js";
+import { cliente } from "../models/index.js";
 import { endereco } from "../models/endereco.js";
 
 class ClienteController {
@@ -72,15 +72,38 @@ class ClienteController {
     }
   };
 
-  static listarClientesPorEndereco = async (req, res) => {
-    const endereco = req.query.endereco;
+  static listarClientesPorFiltro = async (req, res, next) => {
     try {
-      const clientePorEndereco = await cliente.find({ nome: endereco });
-      res.status(200).json(clientePorEndereco);
+      const busca = await processaBusca(req.query);
+
+      if (busca !== null) {
+        const clienteResultado = await cliente.find(busca).populate("endereco");
+        res.status(200).json(clienteResultado);
+      } else {
+        res.status(200).send([]);
+      }
     } catch (erro) {
-      res.status(500).json({ message: `${erro.message} - falha na busca` });
+      next(erro);
     }
   };
+}
+
+async function processaBusca(parametros) {
+  const { nomeCliente } = parametros;
+
+  let busca = {};
+
+  if (nomeCliente) {
+    const clientes = await cliente.findOne({ nome: nomeCliente });
+
+    if (clientes !== null) {
+      busca.cliente = clientes._id;
+    } else {
+      busca = null;
+    }
+  }
+
+  return busca;
 }
 
 export default ClienteController;

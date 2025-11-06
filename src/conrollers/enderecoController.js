@@ -1,5 +1,5 @@
 import NaoEncontrado from "../erros/NaoEncontrado.js";
-import { endereco } from "../models/endereco.js";
+import { endereco } from "../models/index.js";
 
 class EnderecoController {
   static listarEndereco = async (req, res, next) => {
